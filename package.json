@@ -10,7 +10,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsup",
-    "lint": "tsc"
+    "lint": "tsc --noEmit",
+    "test": "vitest"
   },
   "exports": {
     ".": {
@@ -27,6 +28,8 @@
   },
   "devDependencies": {
     "typescript": "^5.4.5",
-    "tsup": "^8.5.1"
+    "tsup": "^8.5.1",
+    "assert": "^2.1.0",
+    "vitest": "^1.6.0"
   }
 }
