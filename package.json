@@ -10,6 +10,10 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TheDarkDnKTv/comparator-framework.git"
+  },
   "scripts": {
     "build": "tsup",
     "lint": "tsc --noEmit",
@@ -22,6 +26,10 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "lib/*",
+    "dist/*"
+  ],
   "packageManager": "pnpm@10.29.2",
   "dependencies": {
 
