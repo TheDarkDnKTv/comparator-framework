@@ -543,19 +543,26 @@ describe('comparator/edge-cases-identical-values', () => {
     });
 });
 
-describe('comparator/null-and-undefined', () => {
-  it('sorts null and undefined to the end in natural order', () => {
-    // Array with mixed primitives, null, and undefined
-    const data = [3, null, 1, undefined, 2];
+describe('comparator/nulls-policy', () => {
+  it('forces nulls to the front using .nullsFirst() on primitive arrays', () => {
+    // Note: JS engine always forces primitive `undefined` to the very end natively,
+    // so we test `null` here to verify the comparator's actual behavior.
+    const data = [3, null, 1, 2];
 
-    const sorted = data.sort(Comparator.naturalOrder<number | null | undefined>());
+    const sorted = data.sort(Comparator.naturalOrder<number | null>().nullsFirst());
 
-    // Now both null and undefined group nicely at the end.
-    // (JS handles undefined, your logic handles null).
-    assert.deepEqual(sorted, [1, 2, 3, null, undefined]);
+    assert.deepEqual(sorted, [null, 1, 2, 3]);
   });
 
-  it('sorts objects with missing/undefined keys to the end', () => {
+  it('forces nulls to the end using .nullsLast() on primitive arrays', () => {
+    const data = [3, null, 1, 2];
+
+    const sorted = data.sort(Comparator.naturalOrder<number | null>().nullsLast());
+
+    assert.deepEqual(sorted, [1, 2, 3, null]);
+  });
+
+  it('applies nullsFirst() to extracted object keys', () => {
     type PartialData = { id: number; rank?: number | null };
     const data: PartialData[] = [
       { id: 1, rank: 5 },
@@ -564,45 +571,39 @@ describe('comparator/null-and-undefined', () => {
       { id: 4, rank: 1 }
     ];
 
-    const sorted = data.sort(Comparator.comparing<PartialData>('rank'));
+    // We pass the nullsFirst comparator specifically for the 'rank' key
+    const sorted = data.sort(
+      Comparator.comparing<PartialData>('rank', Comparator.naturalOrder<PartialData['rank']>().nullsFirst())
+    );
 
+    // Because we are sorting objects, JS doesn't force undefined to the end,
+    // allowing our comparator to perfectly group them at the front!
     assert.deepEqual(sorted, [
+      { id: 2 },             // undefined
+      { id: 3, rank: null }, // null
       { id: 4, rank: 1 },
-      { id: 1, rank: 5 },
-      { id: 2 },             // Undefined goes back
-      { id: 3, rank: null }  // Null goes back (stable sort preserves original relative order)
+      { id: 1, rank: 5 }
     ]);
   });
 
-  it('sorts null to the front in reverse order, but primitive undefined stays at the end', () => {
-    const data = [3, null, 1, undefined, 2];
-    const sorted = data.sort(Comparator.reverseOrder<number | null | undefined>());
-
-    // JS Native Quirk: Primitive undefined is ALWAYS forced to the end of the array,
-    // ignoring the comparator. But null properly reverses to the front!
-    assert.deepEqual(sorted, [null, 3, 2, 1, undefined]);
-  });
-
-  it('sorts objects with missing/undefined keys perfectly to the front in reverse order', () => {
+  it('applies nullsLast() to extracted object keys', () => {
     type PartialData = { id: number; rank?: number | null };
     const data: PartialData[] = [
       { id: 1, rank: 5 },
-      { id: 2 },             // rank is undefined
-      { id: 3, rank: null }, // rank is null
+      { id: 2 },
+      { id: 3, rank: null },
       { id: 4, rank: 1 }
     ];
 
     const sorted = data.sort(
-      Comparator.comparing<PartialData>('rank', Comparator.reverseOrder())
+      Comparator.comparing((a: PartialData) => a.rank, Comparator.naturalOrder().nullsLast())
     );
 
-    // Because these are objects, JS doesn't force them to the end.
-    // They reverse perfectly!
     assert.deepEqual(sorted, [
-      { id: 2 },             // Undefined reverses to front
-      { id: 3, rank: null }, // Null reverses to front
+      { id: 4, rank: 1 },
       { id: 1, rank: 5 },
-      { id: 4, rank: 1 }
+      { id: 2 },             // undefined groups at the back
+      { id: 3, rank: null }  // null groups at the back
     ]);
   });
 });

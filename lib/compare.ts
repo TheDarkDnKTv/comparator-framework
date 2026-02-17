@@ -19,11 +19,20 @@ export type IComparable<T> = number | boolean | string | undefined | null | Comp
  */
 export type ComparatorFunction<T> = (a: T, b: T) => number;
 
+
 export type IComparator<T> = ComparatorFunction<T> & {
   thenComparing(comparator: IComparator<T>): IComparator<T>;
   thenComparing<K extends IComparable<T>>(keyExtractor: (value: T) => K): IComparator<T>;
   thenComparing<K>(keyExtractor: (value: T) => K, keyComparator: IComparator<K>): IComparator<T>;
   reversed(): IComparator<T>;
+  /**
+   * IMPORTANT: due JS Array.sort() implementation, `undefined` will be ALWAYS at end of array
+   */
+  nullsFirst(): IComparator<T>;
+  /**
+   * IMPORTANT: due JS Array.sort() implementation, `undefined` will be ALWAYS at end of array
+   */
+  nullsLast(): IComparator<T>;
 };
 
 export namespace Comparator {
@@ -142,6 +151,24 @@ function createComparator<T>(compareFunction: ComparatorFunction<T>): IComparato
 
   comparatorFunc.reversed = function () {
     return createComparator<T>((a, b) => this(b, a));
+  };
+
+  comparatorFunc.nullsFirst = function () {
+    return createComparator<T>((a, b) => {
+      if (isNull(a) && isNull(b)) return 0;
+      if (isNull(a)) return -1;
+      if (isNull(b)) return 1;
+      return comparatorFunc(a, b);
+    });
+  };
+
+  comparatorFunc.nullsLast = function () {
+    return createComparator<T>((a, b) => {
+      if (isNull(a) && isNull(b)) return 0;
+      if (isNull(a)) return 1;
+      if (isNull(b)) return -1;
+      return comparatorFunc(a, b);
+    });
   };
 
   return comparatorFunc as IComparator<T>;
