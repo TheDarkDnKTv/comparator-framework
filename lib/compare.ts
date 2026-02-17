@@ -6,7 +6,7 @@ export interface Comparable<T> {
   compareTo(other: T): number;
 }
 
-export type IComparable<T> = number | boolean | string | Comparable<T>;
+export type IComparable<T> = number | boolean | string | undefined | null | Comparable<T>;
 
 /**
  * Compare function between two objects
@@ -26,13 +26,21 @@ export type IComparator<T> = ComparatorFunction<T> & {
   reversed(): IComparator<T>;
 };
 
-type ComparableIndex<T> = keyof {
-  [P in keyof T as T[P] extends IComparable<T> ? P : never]: never;
-};
-
 export namespace Comparator {
   export function naturalOrder<T extends IComparable<T>>(): IComparator<T> {
     return createComparator<T>((a, b) => {
+      if (isNull(a) && isNull(b)) {
+        return 0;
+      }
+
+      if (isNull(a)) {
+        return 1;
+      }
+
+      if (isNull(b)) {
+        return -1;
+      }
+
       if (typeof a === 'number' && typeof b === 'number') {
         return a - b;
       }
@@ -58,7 +66,7 @@ export namespace Comparator {
     return createComparator<T>((a, b) => naturalComparator(b, a));
   }
 
-  export function comparing<T, K extends ComparableIndex<T>>(
+  export function comparing<T, K extends keyof T = keyof T>(
     objectKey: K,
     keyComparator?: IComparator<T[K]>
   ): IComparator<T>;
@@ -67,7 +75,7 @@ export namespace Comparator {
     keyComparator?: IComparator<K>
   ): IComparator<T>;
   export function comparing<T, K extends IComparable<K>>(
-    keyOrKeyExtractor: ComparableIndex<T> | ((value: T) => K),
+    keyOrKeyExtractor: keyof T | ((value: T) => K),
     keyComparator?: IComparator<K>
   ): IComparator<T> {
     if (typeof keyOrKeyExtractor !== 'function') {
@@ -146,4 +154,8 @@ function isComparable(value: unknown): value is Comparable<any> {
     (value as any).compareTo !== undefined &&
     (value as any).compareTo.length === 1
   );
+}
+
+function isNull(val: unknown): val is null | undefined {
+  return val === null || typeof val === 'undefined';
 }
