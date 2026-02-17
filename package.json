@@ -1,13 +1,15 @@
 {
   "name": "comparator-framework",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "TheDarkDnKTv",
   "license": "Apache-2.0",
-  "description": "",
+  "description": "A easy to use chainable lightweight comparator util library inspired by Java Comparators",
   "keywords": ["comparator", "framework", "compare", "java"],
   "type": "module",
   "sideEffects": false,
-  "main": "index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "lint": "tsc --noEmit",
@@ -16,12 +18,10 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "require": "./dist/index.cjs",
       "import": "./dist/index.js"
     }
   },
-  "files": [
-    "dist"
-  ],
   "packageManager": "pnpm@10.29.2",
   "dependencies": {
 
